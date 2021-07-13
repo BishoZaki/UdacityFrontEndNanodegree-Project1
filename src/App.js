@@ -1,9 +1,11 @@
-import React from 'react'
-import './App.css'
+import React from 'react';
+import { BrowserRouter, Switch, Route } from "react-router-dom";
+
+import * as BooksAPI from "./BooksAPI";
 import Home from "./Home";
 import Search from "./Search";
-import * as BooksAPI from "./BooksAPI";
-import { BrowserRouter, Switch, Route } from "react-router-dom";
+import './App.css';
+
 
 class BooksApp extends React.Component {
     constructor(props) {
@@ -14,10 +16,10 @@ class BooksApp extends React.Component {
     }
 
     async componentDidMount() {
-        await this.getListOfBooks()
+        await this.getBooksList()
     }
 
-    async getListOfBooks() {
+    async getBooksList() {
         const books = await BooksAPI.getAll();
         this.setState({
             books
@@ -31,20 +33,20 @@ class BooksApp extends React.Component {
 
     updateShelf = async (updatedBook, updatedList, pageName) => {
         let {books} = this.state;
-        let isBookNotUpdated = true;
+        let isBookUpdated = false;
         books = books.map((book) => {
             if (book.id === updatedBook.id) {
                 Object.keys(updatedList).forEach((shelfName) => {
                     if (updatedList[shelfName].includes(book.id)) {
                         book.shelf = shelfName;
-                        isBookNotUpdated = false;
+                        isBookUpdated = true;
                     }
                 });
             }
             return book;
         });
 
-        if (isBookNotUpdated) {
+        if (!isBookUpdated) {
             if (pageName === "HOME") {
                 books = books.filter((item) => item.id !== updatedBook.id)
             } else {
@@ -58,7 +60,7 @@ class BooksApp extends React.Component {
         });
     };
 
-    async changeBookShelf(e, book, pageName) {
+    async updateBookShelf(e, book, pageName) {
         const updatedList = await BooksAPI.update(book, e.target.value);
         this.updateShelf(book, updatedList, pageName);
     }
@@ -85,7 +87,7 @@ class BooksApp extends React.Component {
                             backgroundImage: `url(${book.imageLinks ? book.imageLinks.smallThumbnail : ""})`
                         }}></div>
                         <div className="book-shelf-changer">
-                            <select onChange={(e) => this.changeBookShelf(e, book, pageName)} value={this.getSelectedBook(book)}>
+                            <select onChange={(e) => this.updateBookShelf(e, book, pageName)} value={this.getSelectedBook(book)}>
                                 <option value="move" disabled>Move to...</option>
                                 <option value="currentlyReading" disabled={book.shelf === "currentlyReading"}>Currently Reading</option>
                                 <option value="wantToRead" disabled={book.shelf === "wantToRead"}>Want to Read</option>
